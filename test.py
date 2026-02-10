@@ -1,14 +1,9 @@
-from plant_disease_pipeline import PlantDiseaseAssistant
+from plant_disease_cnn import PlantDiseaseCNN
 
-# Initialize
-assistant = PlantDiseaseAssistant(
-    num_classes=38,
-    confidence_threshold=0.7,
-    llm_model="llama3.2:1b"
-)
+# Load the trained model
+model = PlantDiseaseCNN()
+model.load_model('best_plant_disease_model.pth')
+# Make predictions
+result = model.predict('temp_upload.jpg')
 
-# Analyze single image
-result = assistant.analyze_and_display('temp_upload.jpg')
-
-# Batch analysis
-results = assistant.batch_analyze('images_folder/')
+print(result)

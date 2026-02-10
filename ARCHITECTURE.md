@@ -12,7 +12,7 @@ This system implements a complete CNN → LLM pipeline for plant disease detecti
 ┌─────────────────────────────────────────────────────────────────┐
 │                     USER INTERFACES                             │
 ├─────────────────┬──────────────────┬──────────────────┬─────────┤
-│  Streamlit UI   │   CLI Tool       │  Python API      │  Future │
+│  Streamlit UI   │   CLI Tool       │  Python API      │         │
 │   (app.py)      │   (cli.py)       │  (pipeline.py)   │  Mobile │
 └────────┬────────┴────────┬─────────┴─────────┬────────┴─────────┘
          │                 │                   │

@@ -14,7 +14,7 @@ import tempfile
 import shutil
 import json
 import torch
-
+from fastapi.middleware.cors import CORSMiddleware
 # Import your pipeline (adjust import path as needed)
 from plant_disease_pipeline import PlantDiseaseAssistant
 
@@ -23,7 +23,12 @@ app = FastAPI(
     description="Detect plant diseases from leaf images (file upload or URL)",
     version="1.0.0"
 )
-
+app.add_middleware(CORSMiddleware,
+allow_origins=["*"],
+allow_credentials=True,
+allow_methods=["*"],
+allow_headers=["*"],
+)
 # Global assistant (loaded once at startup)
 assistant = None
 

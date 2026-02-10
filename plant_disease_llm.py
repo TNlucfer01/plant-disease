@@ -7,10 +7,9 @@ import requests
 import json
 from typing import Dict, Optional
 
+
 class PlantDiseaseLLM:
-    def __init__(self, 
-                 model_name="mistral",  # Lightweight model
-                 ollama_url="http://localhost:11434"):
+    def __init__(self, model_name="llama3.2:1b", ollama_url="http://localhost:11434"):
         """
         Initialize LLM client
         
@@ -21,7 +20,7 @@ class PlantDiseaseLLM:
         self.model_name = model_name
         self.ollama_url = ollama_url
         self.api_endpoint = f"{ollama_url}/api/generate"
-    
+
     def create_prompt(self, prediction_result: Dict) -> str:
         """
         Convert CNN prediction to structured LLM prompt
@@ -35,65 +34,102 @@ class PlantDiseaseLLM:
         plant = prediction_result['plant']
         disease = prediction_result['disease']
         confidence = prediction_result['confidence']
-        is_confident = prediction_result['is_confident']
+        is_confident = prediction_result.get('is_confident', True)
         
-        # Handle uncertain predictions
-        if not is_confident:
-            prompt = f"""You are an expert agricultural advisor. A farmer has submitted a leaf image for disease detection.
+        # Check if plant is healthy
+        is_healthy = disease.lower() == 'healthy'
+        
+        if is_healthy:
+            prompt = f"""You are an expert agricultural advisor. A farmer has submitted a leaf image for analysis.
 
 DETECTION RESULT:
-- Most likely plant: {plant}
-- Most likely condition: {disease}
-- Confidence level: {confidence:.1%} (LOW CONFIDENCE)
+- Plant: {plant}
+- Status: {disease}
+- Confidence: {confidence:.1%}
 
-The AI detection system has low confidence in this diagnosis. This could mean:
-1. The image quality is poor
-2. The symptoms are unclear or early-stage
-3. The plant may have an uncommon disease
-4. Multiple diseases may be present
+The plant appears to be HEALTHY. Please provide encouragement and maintenance advice in this format:
 
-Please provide:
-1. A brief explanation of why confidence is low
-2. What the farmer should look for to confirm the diagnosis
-3. General precautions they should take while investigating
-4. When to seek professional help
+**WELCOME NOTE**
+A warm, encouraging message congratulating the farmer on maintaining healthy {plant} plants.
 
-Keep the response practical, concise (under 200 words), and farmer-friendly."""
+**CURRENT STATUS**
+Brief confirmation that the plant shows no signs of disease.
+
+**MAINTENANCE RECOMMENDATIONS**
+Best practices to keep the {plant} healthy:
+- Watering schedule
+- Fertilization tips
+- Preventive care
+- Monitoring practices
+
+Keep the response positive, practical, and under 250 words."""
+
         else:
-            # High confidence prompt
-            prompt = f"""You are an expert agricultural advisor. A farmer's leaf image shows the following diagnosis:
+            # Disease detected - always provide full advice
+            confidence_note = ""
+            if not is_confident:
+                confidence_note = f"\n\n⚠️ Note: Detection confidence is {confidence:.1%}. Please verify symptoms and consider professional consultation if unsure."
+            
+            prompt = f"""You are an expert agricultural advisor. A farmer has submitted a leaf image showing disease symptoms.
 
 DETECTION RESULT:
 - Plant: {plant}
 - Disease: {disease}
 - Confidence: {confidence:.1%}
 
-Please provide practical advice in this format:
+Please provide comprehensive advice in this EXACT format:
 
-1. DISEASE OVERVIEW (2-3 sentences)
-Brief description of {disease} and why it affects {plant}.
+**WELCOME NOTE**
+A brief, empathetic greeting acknowledging the farmer's concern about their {plant} plant.
 
-2. SYMPTOMS TO CONFIRM
-What visual signs the farmer should verify on their plants.
+**DISEASE OVERVIEW**
+- What is {disease}?
+- Why does it affect {plant}?
+- How serious is this disease?
 
-3. IMMEDIATE ACTIONS
-What the farmer should do RIGHT NOW (within 24-48 hours).
+**CAUSES OF THE DISEASE**
+List the main factors that cause {disease}:
+- Environmental conditions (humidity, temperature, etc.)
+- Poor agricultural practices
+- Pathogen spread mechanisms
+- Other contributing factors
 
-4. TREATMENT OPTIONS
-- Chemical: Specific fungicides/pesticides (with active ingredients)
-- Organic: Natural alternatives
-- Cultural: Farm management practices
+**SYMPTOMS TO CONFIRM**
+Visual signs the farmer should check on their plants to confirm this diagnosis.
 
-5. PREVENTION
-How to prevent this disease in the future.
+**TREATMENT & REMEDY**
+Provide specific, actionable treatments:
 
-Keep it practical, specific to {plant} and {disease}, concise (under 300 words), and use simple language for farmers."""
+1. **Immediate Actions** (within 24-48 hours):
+   - What to do RIGHT NOW
+
+2. **Chemical Treatment**:
+   - Recommended fungicides/pesticides with active ingredients
+   - Application instructions
+   - Safety precautions
+
+3. **Organic/Natural Alternatives**:
+   - Home remedies and organic solutions
+   - Natural fungicides or pesticides
+
+4. **Cultural Practices**:
+   - Farm management changes
+   - Pruning and sanitation
+   - Crop rotation suggestions
+
+**PREVENTION**
+How to prevent {disease} from occurring again in the future.
+
+{confidence_note}
+
+Keep the language simple, practical, and farmer-friendly. Total length: 300-400 words."""
 
         return prompt
-    
+
     def get_advice(self, prediction_result: Dict, temperature=0.3) -> Dict:
         """
         Get LLM-generated advice based on CNN prediction
+        ALWAYS generates advice for top prediction regardless of confidence
         
         Args:
             prediction_result: CNN prediction dictionary
@@ -113,7 +149,7 @@ Keep it practical, specific to {plant} and {disease}, concise (under 300 words),
             "options": {
                 "temperature": temperature,
                 "top_p": 0.9,
-                "num_predict": 512  # Max tokens
+                "num_predict": 600  # Increased for structured format
             }
         }
         
@@ -122,7 +158,7 @@ Keep it practical, specific to {plant} and {disease}, concise (under 300 words),
             response = requests.post(
                 self.api_endpoint,
                 json=payload,
-                timeout=60
+                timeout=90  # Increased timeout for longer responses
             )
             response.raise_for_status()
             
@@ -137,7 +173,8 @@ Keep it practical, specific to {plant} and {disease}, concise (under 300 words),
                 'prompt': prompt,
                 'plant': prediction_result['plant'],
                 'disease': prediction_result['disease'],
-                'confidence': prediction_result['confidence']
+                'confidence': prediction_result['confidence'],
+                'is_confident': prediction_result.get('is_confident', True)
             }
             
         except requests.exceptions.ConnectionError:
@@ -146,52 +183,91 @@ Keep it practical, specific to {plant} and {disease}, concise (under 300 words),
                 'error': 'Cannot connect to Ollama. Make sure Ollama is running (ollama serve)',
                 'fallback_advice': self._get_fallback_advice(prediction_result)
             }
+            
         except Exception as e:
             return {
                 'success': False,
                 'error': str(e),
                 'fallback_advice': self._get_fallback_advice(prediction_result)
             }
-    
+
     def _get_fallback_advice(self, prediction_result: Dict) -> str:
         """
-        Provide basic advice when LLM is unavailable
+        Provide structured basic advice when LLM is unavailable
         """
         plant = prediction_result['plant']
         disease = prediction_result['disease']
         confidence = prediction_result['confidence']
-        
-        if not prediction_result['is_confident']:
-            return f"""⚠️ Low confidence detection ({confidence:.1%})
-
-The image analysis is uncertain. Please:
-1. Take clearer photos in good lighting
-2. Capture multiple affected leaves
-3. Consult a local agricultural extension officer
-4. Consider getting a professional diagnosis"""
+        is_confident = prediction_result.get('is_confident', True)
         
         if disease.lower() == 'healthy':
-            return f"""✅ Your {plant} appears healthy!
+            return f"""**WELCOME NOTE**
+Great news! Your {plant} plant appears to be in good health.
 
-The detection shows no signs of disease ({confidence:.1%} confidence).
+**CURRENT STATUS**
+No disease symptoms detected (Confidence: {confidence:.1%})
 
-Maintenance tips:
-- Continue regular watering and fertilization
-- Monitor for any new symptoms
-- Maintain good air circulation
-- Practice crop rotation if applicable"""
-        
-        return f"""🔍 Detected: {disease} on {plant} ({confidence:.1%} confidence)
-
-General recommendations:
-1. Isolate affected plants if possible
-2. Remove and destroy infected leaves
-3. Improve air circulation around plants
-4. Avoid overhead watering
-5. Consult local agricultural extension for specific treatments
+**MAINTENANCE RECOMMENDATIONS**
+To keep your {plant} healthy:
+- Water regularly but avoid overwatering
+- Ensure good drainage and air circulation
+- Apply balanced fertilizer as needed
+- Monitor leaves regularly for any changes
+- Remove dead or damaged leaves promptly
 
 ⚠️ LLM service unavailable - showing basic guidance only."""
-    
+
+        confidence_warning = ""
+        if not is_confident:
+            confidence_warning = f"\n\n⚠️ **Low Confidence Warning** ({confidence:.1%})\nThe detection system is not very confident. Please verify symptoms and consider professional diagnosis."
+
+        return f"""**WELCOME NOTE**
+We understand your concern about your {plant} plant showing signs of {disease}.
+
+**DISEASE OVERVIEW**
+{disease} has been detected on your {plant} plant with {confidence:.1%} confidence.
+
+**CAUSES OF THE DISEASE**
+Common causes include:
+- High humidity and poor air circulation
+- Overhead watering
+- Infected plant material or soil
+- Favorable weather conditions for pathogen growth
+
+**TREATMENT & REMEDY**
+
+**Immediate Actions:**
+1. Isolate affected plants if possible
+2. Remove and destroy severely infected leaves
+3. Avoid working with plants when wet
+
+**Chemical Treatment:**
+- Consult local agricultural store for appropriate fungicide/pesticide
+- Follow label instructions carefully
+- Apply during cooler parts of the day
+
+**Organic Alternatives:**
+- Neem oil spray
+- Copper-based fungicides
+- Baking soda solution (1 tbsp per gallon of water)
+
+**Cultural Practices:**
+- Improve air circulation by proper spacing
+- Water at the base of plants, not overhead
+- Remove plant debris regularly
+- Practice crop rotation
+
+**PREVENTION**
+- Use disease-resistant varieties
+- Maintain good sanitation
+- Avoid overhead irrigation
+- Monitor plants regularly
+
+{confidence_warning}
+
+⚠️ LLM service unavailable - showing basic guidance only.
+For detailed treatment, please consult a local agricultural extension officer."""
+
     def test_connection(self) -> bool:
         """Test if Ollama is running"""
         try:
@@ -199,7 +275,7 @@ General recommendations:
             return response.status_code == 200
         except:
             return False
-    
+
     def list_available_models(self) -> list:
         """List models available in Ollama"""
         try:
@@ -225,24 +301,65 @@ if __name__ == "__main__":
     else:
         print("✗ Ollama is not running. Start it with: ollama serve")
     
-    # Example prediction result from CNN
-    example_result = {
-        'plant': 'Tomato',
-        'disease': 'Early blight',
+    # Example 1: High confidence disease detection
+    print("\n" + "="*70)
+    print("EXAMPLE 1: Potato Late Blight (High Confidence)")
+    print("="*70)
+    
+    example1 = {
+        'plant': 'Potato',
+        'disease': 'Late blight',
         'confidence': 0.92,
         'is_confident': True,
+        'raw_class': 'Potato___Late_blight'
+    }
+    
+    advice1 = llm.get_advice(example1)
+    if advice1['success']:
+        print(advice1['advice'])
+    else:
+        print(f"\nError: {advice1.get('error')}")
+        print("\nFallback advice:")
+        print(advice1.get('fallback_advice'))
+    
+    # Example 2: Low confidence detection
+    print("\n" + "="*70)
+    print("EXAMPLE 2: Tomato Early Blight (Low Confidence)")
+    print("="*70)
+    
+    example2 = {
+        'plant': 'Tomato',
+        'disease': 'Early blight',
+        'confidence': 0.45,
+        'is_confident': False,
         'raw_class': 'Tomato___Early_blight'
     }
     
-    # Get advice
-    advice = llm.get_advice(example_result)
-    
-    if advice['success']:
-        print("\n" + "="*60)
-        print("LLM ADVICE:")
-        print("="*60)
-        print(advice['advice'])
+    advice2 = llm.get_advice(example2)
+    if advice2['success']:
+        print(advice2['advice'])
     else:
-        print(f"\nError: {advice.get('error')}")
+        print(f"\nError: {advice2.get('error')}")
         print("\nFallback advice:")
-        print(advice.get('fallback_advice'))
+        print(advice2.get('fallback_advice'))
+    
+    # Example 3: Healthy plant
+    print("\n" + "="*70)
+    print("EXAMPLE 3: Healthy Potato")
+    print("="*70)
+    
+    example3 = {
+        'plant': 'Potato',
+        'disease': 'Healthy',
+        'confidence': 0.88,
+        'is_confident': True,
+        'raw_class': 'Potato___Healthy'
+    }
+    
+    advice3 = llm.get_advice(example3)
+    if advice3['success']:
+        print(advice3['advice'])
+    else:
+        print(f"\nError: {advice3.get('error')}")
+        print("\nFallback advice:")
+        print(advice3.get('fallback_advice'))

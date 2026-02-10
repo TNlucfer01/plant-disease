@@ -19,7 +19,6 @@ A complete end-to-end system that uses **MobileNetV2** for disease detection and
                      │    Advice    │      │    (LLM)    │
                      └──────────────┘      └─────────────┘
 ```
-
 ---
 
 ## ✨ Features
@@ -315,6 +314,7 @@ device = torch.device('cpu')
 | Peach | Bacterial spot, Healthy |
 | Others | Blueberry, Raspberry, Soybean, Squash, Orange, Cotton |
 
+
 **Add Your Own:**
 Edit `class_names` in `plant_disease_cnn.py`
 
@@ -348,6 +348,7 @@ torch.onnx.export(
     "model.onnx",
     export_params=True
 )
+
 ```
 
 ---
@@ -406,7 +407,6 @@ MIT License - Feel free to use and modify!
 
 **Q: Can I use this offline?**  
 A: Yes! Both CNN and LLM run locally (Ollama).
-
 **Q: What GPU do I need?**  
 A: None! CPU works fine. GPU speeds up training.
 
@@ -437,5 +437,6 @@ A: Yes, MIT license allows it.
 ---
 
 **Built with ❤️ for farmers and researchers worldwide**
-#   p l a n t - d i s e a s e  
+#   p l a n t - d i s e a s e 
+ 
  

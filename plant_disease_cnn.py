@@ -138,8 +138,7 @@ class PlantDiseaseCNN:
             'confidence': confidence,
             'is_confident': confidence >= self.confidence_threshold,
             'raw_class': disease_name,
-            'all_probabilities': probabilities.tolist(),
-            'top_5': self._get_top_k(probabilities, k=5)
+            'all_probabilities': probabilities.tolist()
         }
         
         return result
@@ -203,7 +202,9 @@ class PlantDiseaseCNN:
 if __name__ == "__main__":
     # Initialize model
     model = PlantDiseaseCNN(num_classes=38, confidence_threshold=0.7)
-    
+    model.load_model('best_plant_disease_model.pth')
+
+
     # Print summary
     model.get_model_summary()
     

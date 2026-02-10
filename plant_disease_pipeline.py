@@ -112,10 +112,6 @@ class PlantDiseaseAssistant:
         else:
             print("Status: ⚠️  Low Confidence - Further verification needed")
         
-        print("\nTop 5 Predictions:")
-        for i, pred in enumerate(detection['top_5'], 1):
-            print(f"  {i}. {pred['plant']} - {pred['disease']} ({pred['confidence']:.1%})")
-        
         print("\n" + "=" * 60)
         print("TREATMENT ADVICE")
         print("=" * 60)
@@ -193,7 +189,7 @@ if __name__ == "__main__":
     assistant = PlantDiseaseAssistant(
         num_classes=38,
         confidence_threshold=0.7,
-        llm_model="llama3.2:3b"  # Change to your model
+        llm_model="llama3.2:1b"  # Change to your model
     )
     
     # Print model info
