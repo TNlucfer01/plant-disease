@@ -21,7 +21,7 @@ class PlantDiseaseTrainer:
                  data_dir,
                  num_classes=38,
                  batch_size=32,
-                 learning_rate=0.001,
+                 learning_rate=0.01,
                  num_epochs=10,
                  device=None):
         """
@@ -327,8 +327,8 @@ if __name__ == "__main__":
     # Configuration
     DATA_DIR = 'dataset'  # Change to your dataset path
     NUM_CLASSES = 38      # Change based on your dataset
-    BATCH_SIZE = 32       # Adjust based on GPU memory
-    LEARNING_RATE = 0.001
+    BATCH_SIZE = 38       # Adjust based on GPU memory
+    LEARNING_RATE = 0.01
     NUM_EPOCHS = 10
     
     # Initialize trainer

@@ -30,6 +30,10 @@ class PlantDiseaseAssistant:
             confidence_threshold=confidence_threshold
         )
         
+        # Load trained weights
+        print("Loading trained model weights...")
+        self.cnn.load_model('best_plant_disease_model.pth')
+        
         # Initialize LLM
         print("Connecting to LLM (Ollama)...")
         self.llm = PlantDiseaseLLM(model_name=llm_model)

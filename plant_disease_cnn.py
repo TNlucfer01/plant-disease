@@ -131,6 +131,9 @@ class PlantDiseaseCNN:
         # Parse disease name
         plant_name, disease = self._parse_disease_name(disease_name)
         
+        # Get top 5 predictions
+        top_5 = self._get_top_k(probabilities, k=5)
+        
         # Create result dictionary
         result = {
             'plant': plant_name,
@@ -138,6 +141,7 @@ class PlantDiseaseCNN:
             'confidence': confidence,
             'is_confident': confidence >= self.confidence_threshold,
             'raw_class': disease_name,
+            'top_5': top_5,
             'all_probabilities': probabilities.tolist()
         }
         

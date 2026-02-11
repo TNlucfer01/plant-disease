@@ -4,15 +4,18 @@ Uses local Ollama for generating treatment recommendations
 """
 
 import requests
-import json
-from typing import Dict, Optional
+from typing import Dict
 
 
 class PlantDiseaseLLM:
-    def __init__(self, model_name="llama3.2:1b", ollama_url="http://localhost:11434"):
+    def __init__(
+        self,
+        model_name: str = "llama3.2:1b",
+        ollama_url: str = "http://localhost:11434",
+    ):
         """
         Initialize LLM client
-        
+
         Args:
             model_name: Ollama model to use (llama3.2:3b, mistral, etc.)
             ollama_url: Ollama API endpoint
@@ -24,124 +27,58 @@ class PlantDiseaseLLM:
     def create_prompt(self, prediction_result: Dict) -> str:
         """
         Convert CNN prediction to structured LLM prompt
-        
-        Args:
-            prediction_result: Dictionary from CNN model prediction
-            
-        Returns:
-            str: Formatted prompt for LLM
         """
-        plant = prediction_result['plant']
-        disease = prediction_result['disease']
-        confidence = prediction_result['confidence']
-        is_confident = prediction_result.get('is_confident', True)
-        
-        # Check if plant is healthy
-        is_healthy = disease.lower() == 'healthy'
-        
-        if is_healthy:
-            prompt = f"""You are an expert agricultural advisor. A farmer has submitted a leaf image for analysis.
+        plant = prediction_result["plant"]
+        disease = prediction_result["disease"]
+        confidence = prediction_result["confidence"]
+        is_confident = prediction_result["is_confident"]
+
+        if not is_confident:
+            return f"""
+You are an expert agricultural advisor.
 
 DETECTION RESULT:
 - Plant: {plant}
-- Status: {disease}
-- Confidence: {confidence:.1%}
+- Condition: {disease}
+- Confidence: {confidence:.1%} (LOW)
 
-The plant appears to be HEALTHY. Please provide encouragement and maintenance advice in this format:
+Explain:
+1. Why confidence may be low
+2. What signs to check
+3. General precautions
+4. When to seek expert help
 
-**WELCOME NOTE**
-A warm, encouraging message congratulating the farmer on maintaining healthy {plant} plants.
+Keep it under 200 words and farmer-friendly.
+"""
 
-**CURRENT STATUS**
-Brief confirmation that the plant shows no signs of disease.
-
-**MAINTENANCE RECOMMENDATIONS**
-Best practices to keep the {plant} healthy:
-- Watering schedule
-- Fertilization tips
-- Preventive care
-- Monitoring practices
-
-Keep the response positive, practical, and under 250 words."""
-
-        else:
-            # Disease detected - always provide full advice
-            confidence_note = ""
-            if not is_confident:
-                confidence_note = f"\n\n⚠️ Note: Detection confidence is {confidence:.1%}. Please verify symptoms and consider professional consultation if unsure."
-            
-            prompt = f"""You are an expert agricultural advisor. A farmer has submitted a leaf image showing disease symptoms.
+        return f"""
+You are an expert agricultural advisor.
 
 DETECTION RESULT:
 - Plant: {plant}
 - Disease: {disease}
 - Confidence: {confidence:.1%}
 
-Please provide comprehensive advice in this EXACT format:
+Provide advice in this format:
 
-**WELCOME NOTE**
-A brief, empathetic greeting acknowledging the farmer's concern about their {plant} plant.
+1. DISEASE OVERVIEW
+2. SYMPTOMS TO CONFIRM
+3. IMMEDIATE ACTIONS
+4. TREATMENT OPTIONS
+   - Chemical (active ingredients)
+   - Organic
+   - Cultural
+5. PREVENTION
 
-**DISEASE OVERVIEW**
-- What is {disease}?
-- Why does it affect {plant}?
-- How serious is this disease?
+Keep it under 300 words and practical.
+"""
 
-**CAUSES OF THE DISEASE**
-List the main factors that cause {disease}:
-- Environmental conditions (humidity, temperature, etc.)
-- Poor agricultural practices
-- Pathogen spread mechanisms
-- Other contributing factors
-
-**SYMPTOMS TO CONFIRM**
-Visual signs the farmer should check on their plants to confirm this diagnosis.
-
-**TREATMENT & REMEDY**
-Provide specific, actionable treatments:
-
-1. **Immediate Actions** (within 24-48 hours):
-   - What to do RIGHT NOW
-
-2. **Chemical Treatment**:
-   - Recommended fungicides/pesticides with active ingredients
-   - Application instructions
-   - Safety precautions
-
-3. **Organic/Natural Alternatives**:
-   - Home remedies and organic solutions
-   - Natural fungicides or pesticides
-
-4. **Cultural Practices**:
-   - Farm management changes
-   - Pruning and sanitation
-   - Crop rotation suggestions
-
-**PREVENTION**
-How to prevent {disease} from occurring again in the future.
-
-{confidence_note}
-
-Keep the language simple, practical, and farmer-friendly. Total length: 300-400 words."""
-
-        return prompt
-
-    def get_advice(self, prediction_result: Dict, temperature=0.3) -> Dict:
+    def get_advice(self, prediction_result: Dict, temperature: float = 0.3) -> Dict:
         """
-        Get LLM-generated advice based on CNN prediction
-        ALWAYS generates advice for top prediction regardless of confidence
-        
-        Args:
-            prediction_result: CNN prediction dictionary
-            temperature: LLM temperature (lower = more focused)
-            
-        Returns:
-            Dict with advice text and metadata
+        Get LLM-generated advice from Ollama
         """
-        # Create structured prompt
         prompt = self.create_prompt(prediction_result)
-        
-        # Prepare request payload
+
         payload = {
             "model": self.model_name,
             "prompt": prompt,
@@ -149,217 +86,116 @@ Keep the language simple, practical, and farmer-friendly. Total length: 300-400 
             "options": {
                 "temperature": temperature,
                 "top_p": 0.9,
-                "num_predict": 600  # Increased for structured format
-            }
+                "num_predict": 512,
+            },
         }
-        
+
         try:
-            # Call Ollama API
             response = requests.post(
-                self.api_endpoint,
-                json=payload,
-                timeout=90  # Increased timeout for longer responses
+                self.api_endpoint, json=payload, timeout=60
             )
             response.raise_for_status()
-            
-            # Parse response
+
             result = response.json()
-            advice_text = result.get('response', '')
-            
+            advice_text = result.get("response", "")
+
             return {
-                'success': True,
-                'advice': advice_text,
-                'model_used': self.model_name,
-                'prompt': prompt,
-                'plant': prediction_result['plant'],
-                'disease': prediction_result['disease'],
-                'confidence': prediction_result['confidence'],
-                'is_confident': prediction_result.get('is_confident', True)
+                "success": True,
+                "advice": advice_text,
+                "model_used": self.model_name,
+                "plant": prediction_result["plant"],
+                "disease": prediction_result["disease"],
+                "confidence": prediction_result["confidence"],
             }
-            
+
         except requests.exceptions.ConnectionError:
             return {
-                'success': False,
-                'error': 'Cannot connect to Ollama. Make sure Ollama is running (ollama serve)',
-                'fallback_advice': self._get_fallback_advice(prediction_result)
+                "success": False,
+                "error": "Cannot connect to Ollama. Run: ollama serve",
+                "fallback_advice": self._get_fallback_advice(prediction_result),
             }
-            
+
         except Exception as e:
             return {
-                'success': False,
-                'error': str(e),
-                'fallback_advice': self._get_fallback_advice(prediction_result)
+                "success": False,
+                "error": str(e),
+                "fallback_advice": self._get_fallback_advice(prediction_result),
             }
 
     def _get_fallback_advice(self, prediction_result: Dict) -> str:
         """
-        Provide structured basic advice when LLM is unavailable
+        Basic advice when LLM is unavailable
         """
-        plant = prediction_result['plant']
-        disease = prediction_result['disease']
-        confidence = prediction_result['confidence']
-        is_confident = prediction_result.get('is_confident', True)
-        
-        if disease.lower() == 'healthy':
-            return f"""**WELCOME NOTE**
-Great news! Your {plant} plant appears to be in good health.
+        plant = prediction_result["plant"]
+        disease = prediction_result["disease"]
+        confidence = prediction_result["confidence"]
 
-**CURRENT STATUS**
-No disease symptoms detected (Confidence: {confidence:.1%})
+        if not prediction_result["is_confident"]:
+            return f"""
+⚠️ Low confidence ({confidence:.1%})
 
-**MAINTENANCE RECOMMENDATIONS**
-To keep your {plant} healthy:
-- Water regularly but avoid overwatering
-- Ensure good drainage and air circulation
-- Apply balanced fertilizer as needed
-- Monitor leaves regularly for any changes
-- Remove dead or damaged leaves promptly
+- Retake images in good lighting
+- Capture multiple leaves
+- Consult local agricultural officer
+"""
 
-⚠️ LLM service unavailable - showing basic guidance only."""
+        if disease.lower() == "healthy":
+            return f"""
+✅ {plant} appears healthy ({confidence:.1%})
 
-        confidence_warning = ""
-        if not is_confident:
-            confidence_warning = f"\n\n⚠️ **Low Confidence Warning** ({confidence:.1%})\nThe detection system is not very confident. Please verify symptoms and consider professional diagnosis."
+- Continue routine care
+- Monitor regularly
+- Maintain airflow
+"""
 
-        return f"""**WELCOME NOTE**
-We understand your concern about your {plant} plant showing signs of {disease}.
+        return f"""
+🔍 {disease} detected on {plant} ({confidence:.1%})
 
-**DISEASE OVERVIEW**
-{disease} has been detected on your {plant} plant with {confidence:.1%} confidence.
-
-**CAUSES OF THE DISEASE**
-Common causes include:
-- High humidity and poor air circulation
-- Overhead watering
-- Infected plant material or soil
-- Favorable weather conditions for pathogen growth
-
-**TREATMENT & REMEDY**
-
-**Immediate Actions:**
-1. Isolate affected plants if possible
-2. Remove and destroy severely infected leaves
-3. Avoid working with plants when wet
-
-**Chemical Treatment:**
-- Consult local agricultural store for appropriate fungicide/pesticide
-- Follow label instructions carefully
-- Apply during cooler parts of the day
-
-**Organic Alternatives:**
-- Neem oil spray
-- Copper-based fungicides
-- Baking soda solution (1 tbsp per gallon of water)
-
-**Cultural Practices:**
-- Improve air circulation by proper spacing
-- Water at the base of plants, not overhead
-- Remove plant debris regularly
-- Practice crop rotation
-
-**PREVENTION**
-- Use disease-resistant varieties
-- Maintain good sanitation
-- Avoid overhead irrigation
-- Monitor plants regularly
-
-{confidence_warning}
-
-⚠️ LLM service unavailable - showing basic guidance only.
-For detailed treatment, please consult a local agricultural extension officer."""
+- Isolate affected plants
+- Remove infected leaves
+- Avoid overhead watering
+- Consult local experts
+"""
 
     def test_connection(self) -> bool:
-        """Test if Ollama is running"""
         try:
-            response = requests.get(f"{self.ollama_url}/api/tags", timeout=5)
-            return response.status_code == 200
+            r = requests.get(f"{self.ollama_url}/api/tags", timeout=5)
+            return r.status_code == 200
         except:
             return False
 
     def list_available_models(self) -> list:
-        """List models available in Ollama"""
         try:
-            response = requests.get(f"{self.ollama_url}/api/tags")
-            if response.status_code == 200:
-                models = response.json().get('models', [])
-                return [m['name'] for m in models]
+            r = requests.get(f"{self.ollama_url}/api/tags")
+            if r.status_code == 200:
+                return [m["name"] for m in r.json().get("models", [])]
             return []
         except:
             return []
 
 
-# Example usage
 if __name__ == "__main__":
-    # Initialize LLM
     llm = PlantDiseaseLLM()
-    
-    # Test connection
+
     if llm.test_connection():
         print("✓ Ollama is running")
-        models = llm.list_available_models()
-        print(f"Available models: {models}")
+        print("Models:", llm.list_available_models())
     else:
-        print("✗ Ollama is not running. Start it with: ollama serve")
-    
-    # Example 1: High confidence disease detection
-    print("\n" + "="*70)
-    print("EXAMPLE 1: Potato Late Blight (High Confidence)")
-    print("="*70)
-    
-    example1 = {
-        'plant': 'Potato',
-        'disease': 'Late blight',
-        'confidence': 0.92,
-        'is_confident': True,
-        'raw_class': 'Potato___Late_blight'
+        print("✗ Ollama not running → ollama serve")
+
+    example_result = {
+        "plant": "Tomato",
+        "disease": "Early blight",
+        "confidence": 0.92,
+        "is_confident": True,
+        "raw_class": "Tomato___Early_blight",
     }
-    
-    advice1 = llm.get_advice(example1)
-    if advice1['success']:
-        print(advice1['advice'])
+
+    advice = llm.get_advice(example_result)
+
+    if advice["success"]:
+        print("\nLLM ADVICE:\n")
+        print(advice["advice"])
     else:
-        print(f"\nError: {advice1.get('error')}")
-        print("\nFallback advice:")
-        print(advice1.get('fallback_advice'))
-    
-    # Example 2: Low confidence detection
-    print("\n" + "="*70)
-    print("EXAMPLE 2: Tomato Early Blight (Low Confidence)")
-    print("="*70)
-    
-    example2 = {
-        'plant': 'Tomato',
-        'disease': 'Early blight',
-        'confidence': 0.45,
-        'is_confident': False,
-        'raw_class': 'Tomato___Early_blight'
-    }
-    
-    advice2 = llm.get_advice(example2)
-    if advice2['success']:
-        print(advice2['advice'])
-    else:
-        print(f"\nError: {advice2.get('error')}")
-        print("\nFallback advice:")
-        print(advice2.get('fallback_advice'))
-    
-    # Example 3: Healthy plant
-    print("\n" + "="*70)
-    print("EXAMPLE 3: Healthy Potato")
-    print("="*70)
-    
-    example3 = {
-        'plant': 'Potato',
-        'disease': 'Healthy',
-        'confidence': 0.88,
-        'is_confident': True,
-        'raw_class': 'Potato___Healthy'
-    }
-    
-    advice3 = llm.get_advice(example3)
-    if advice3['success']:
-        print(advice3['advice'])
-    else:
-        print(f"\nError: {advice3.get('error')}")
-        print("\nFallback advice:")
-        print(advice3.get('fallback_advice'))
+        print("Error:", advice["error"])
+        print(advice["fallback_advice"])
