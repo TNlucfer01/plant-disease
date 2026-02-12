@@ -30,12 +30,15 @@ allow_methods=["*"],
 allow_headers=["*"],
 )
 # Global assistant (loaded once at startup)
+#what is a global assistant at all
 assistant = None
 
+#we i need to change this to the gemini api with a  session key 
 @app.on_event("startup")
 async def startup_event():
     global assistant
     print("Loading models...")
+    # i see now 
     assistant = PlantDiseaseAssistant(
         num_classes=38,
         confidence_threshold=0.7,
@@ -43,12 +46,16 @@ async def startup_event():
     )
     print("Models loaded successfully!")
 
+#why do we need the saving at all 
 def save_image_from_bytes(image_bytes: bytes, temp_dir: Path) -> Path:
     """Helper: Save bytes to temporary file"""
     temp_path = temp_dir / "input_image.jpg"
     with open(temp_path, "wb") as f:
         f.write(image_bytes)
     return temp_path
+
+
+# i see we can even download the image frm the online  
 
 def download_image_from_url(url: str, temp_dir: Path) -> Path:
     """Download image from public URL"""
@@ -71,12 +78,15 @@ def download_image_from_url(url: str, temp_dir: Path) -> Path:
     except Exception as e:
         raise ValueError(f"Failed to download or validate image from URL: {str(e)}")
 
+
+
+#for the prediction of the image 
 @app.post("/analyze", summary="Analyze plant leaf image")
+#these are just the functions  definatin 
 async def analyze(
-    # ── File upload (multipart/form-data) ──
+    # ── File upload (multipart/form-data) ── i should change this to accepting mulitple formats 
     file: UploadFile = File(None, description="Leaf image file (jpg/png)"),
-    
-    # ── OR JSON body with URL ──
+    # ── OR JSON body with URL ── what are those examples even mens 
     payload: dict = Body(
         None,
         examples={
@@ -102,6 +112,8 @@ async def analyze(
          "image_url": "https://..."
        }
     """
+
+    #error handling 
     if file is None and (payload is None or "image_url" not in payload):
         raise HTTPException(400, detail="Provide either 'file' (upload) or 'image_url' in JSON body")
 
@@ -109,10 +121,10 @@ async def analyze(
     
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
-        
+        #get the image
         try:
             if file is not None:
-                # ── File upload path ──
+                # ── File upload path ── can i change thse methods 
                 if file.content_type not in ["image/jpeg", "image/jpg", "image/png"]:
                     raise HTTPException(400, "Only jpg/jpeg/png allowed")
                 
@@ -127,11 +139,11 @@ async def analyze(
                 
                 temp_path = download_image_from_url(image_url, temp_dir)
             
-            # Update threshold
+            # Update threshold  
             assistant.cnn.confidence_threshold = confidence_threshold
             
             # Run analysis
-            result = assistant.analyze(temp_path, verbose=False)
+            result = assistant.analyze(temp_path,verbose=True)
             
             return {
                 "status": "success",
