@@ -327,10 +327,9 @@ if __name__ == "__main__":
     # Configuration
     DATA_DIR = 'dataset'  # Change to your dataset path
     NUM_CLASSES = 38      # Change based on your dataset
-    BATCH_SIZE = 38       # Adjust based on GPU memory
+    BATCH_SIZE = 68       # Adjust based on GPU memory
     LEARNING_RATE = 0.01
     NUM_EPOCHS = 10
-    
     # Initialize trainer
     trainer = PlantDiseaseTrainer(
         data_dir=DATA_DIR,
