@@ -437,6 +437,4 @@ A: Yes, MIT license allows it.
 ---
 
 **Built with ❤️ for farmers and researchers worldwide**
-#   p l a n t - d i s e a s e 
- 
- 
+
