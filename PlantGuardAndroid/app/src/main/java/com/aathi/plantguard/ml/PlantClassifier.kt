@@ -31,8 +31,23 @@ class PlantClassifier(context: Context) : AutoCloseable {
     }
 
     init {
-        val modelBytes = context.assets.open("plant_disease_model.onnx").readBytes()
-        session = env.createSession(modelBytes, OrtSession.SessionOptions())
+        val modelFile = copyAssetToCache(context, "plant_disease_model.onnx")
+        copyAssetToCache(context, "plant_disease_model.onnx.data")
+        session = env.createSession(modelFile.absolutePath, OrtSession.SessionOptions())
+    }
+
+    private fun copyAssetToCache(context: Context, assetName: String): java.io.File {
+        val file = java.io.File(context.cacheDir, assetName)
+        // Clean up or overwrite if exists to ensure we have the latest model
+        if (file.exists()) {
+            file.delete()
+        }
+        context.assets.open(assetName).use { input ->
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        return file
     }
 
     fun classify(bitmap: Bitmap): ClassificationResult {

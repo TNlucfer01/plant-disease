@@ -64,7 +64,7 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     
     // ONNX Runtime
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.1")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.19.0")
     
     // CameraX
     val camerax_version = "1.3.1"
