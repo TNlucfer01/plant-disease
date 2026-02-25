@@ -16,7 +16,6 @@ result/
 .gradle/
 build/
 target/
-*.apk
 *.bin
 *.class
 *.jar
