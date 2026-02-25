@@ -32,16 +32,44 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.aathi.plantguard.ui.theme.AccentOrange
 import com.aathi.plantguard.ui.theme.GreenDark
 import java.util.concurrent.Executors
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.graphics.ImageDecoder
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun ScannerScreen(
-    onImageCaptured: (Bitmap) -> Unit
+    onImageCaptured: (Bitmap) -> Unit,
+    onHistoryClick: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    @Suppress("DEPRECATION")
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+                } else {
+                    val source = ImageDecoder.createSource(context.contentResolver, it)
+                    ImageDecoder.decodeBitmap(source)
+                }
+                // Convert to ARGB_8888 if it's not (some decoders might return different configs)
+                val argbBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+                onImageCaptured(argbBitmap)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(GreenDark)) {
         // Camera Preview
@@ -113,7 +141,7 @@ fun ScannerScreen(
         
         // History Icon
         IconButton(
-            onClick = { /* TODO */ },
+            onClick = onHistoryClick,
             modifier = Modifier.padding(24.dp).align(Alignment.TopEnd).background(Color.Black.copy(0.3f), CircleShape)
         ) {
             Icon(Icons.Default.History, contentDescription = "History", tint = Color.White)
@@ -130,7 +158,7 @@ fun ScannerScreen(
         ) {
             // Gallery Button
             IconButton(
-                onClick = { /* TODO */ },
+                onClick = { galleryLauncher.launch("image/*") },
                 modifier = Modifier.size(56.dp).background(Color.White.copy(0.1f), CircleShape)
             ) {
                 Icon(Icons.Default.PhotoLibrary, contentDescription = "Gallery", tint = Color.White)

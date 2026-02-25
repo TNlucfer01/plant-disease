@@ -28,3 +28,4 @@ target/
 *.zip
 
 sdk/
+plant_disease_mobile_android.iml

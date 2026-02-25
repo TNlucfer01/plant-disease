@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.aathi.plantguard.ml.ClassificationResult
 import com.aathi.plantguard.ui.theme.GreenLight
 import com.aathi.plantguard.ui.theme.GreenPrimary
+import com.aathi.plantguard.data.DiseaseRepository
 
 @Composable
 fun ResultScreen(
@@ -32,6 +34,8 @@ fun ResultScreen(
     image: Bitmap,
     onBack: () -> Unit
 ) {
+    val diseaseInfo = remember(result.label) { DiseaseRepository.getInfo(result.label) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,7 +85,7 @@ fun ResultScreen(
             // Info Section
             Text("About This Disease", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E4D32))
             Text(
-                getDiseaseDescription(result.label),
+                diseaseInfo.description,
                 fontSize = 15.sp,
                 color = Color.Gray,
                 lineHeight = 22.sp,
@@ -105,7 +109,7 @@ fun ResultScreen(
                         Text("Recommended Action", fontWeight = FontWeight.Bold, color = Color(0xFF5D4037))
                     }
                     Text(
-                        getRecommendedAction(result.label),
+                        diseaseInfo.remedy,
                         modifier = Modifier.padding(top = 12.dp),
                         color = Color(0xFF795548),
                         fontSize = 15.sp,
@@ -117,9 +121,7 @@ fun ResultScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text("Prevention Tips", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E4D32))
-            
-            val tips = getPreventionTips(result.label)
-            tips.forEachIndexed { index, tip ->
+            for ((index, tip) in diseaseInfo.prevention.withIndex()) {
                 Row(modifier = Modifier.padding(vertical = 8.dp)) {
                     Surface(
                         modifier = Modifier.size(24.dp),
@@ -149,30 +151,4 @@ fun ResultScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-}
-
-// Dummy data helpers - in a real app these could be in a repository
-fun getDiseaseDescription(label: String): String {
-    return when {
-        label.contains("Powdery Mildew") -> "Powdery mildew appears as white, powdery spots on leaves and stems. It thrives in warm, dry conditions with high humidity."
-        label.contains("Healthy") -> "Your plant appears to be healthy! Keep up the good work with regular watering and proper sunlight."
-        else -> "This disease affecting your plant needs attention. It's often caused by fungal or bacterial pathogens that spread in moist environments."
-    }
-}
-
-fun getRecommendedAction(label: String): String {
-    return when {
-        label.contains("Powdery Mildew") -> "Spray affected plants with a mixture of 1 tablespoon baking soda and 1 teaspoon liquid soap per gallon of water. Repeat weekly."
-        label.contains("Healthy") -> "No immediate action required. Continue routine maintenance."
-        else -> "Remove infected leaves immediately to prevent spreading. Apply a suitable fungicide if the symptoms persist."
-    }
-}
-
-fun getPreventionTips(label: String): List<String> {
-    return listOf(
-        "Plant in full sun locations",
-        "Improve air circulation by proper spacing",
-        "Avoid overhead watering",
-        "Remove infected leaves promptly"
-    )
 }

@@ -128,7 +128,7 @@ class PlantClassifier(context: Context) : AutoCloseable {
 data class ClassificationResult(
     val label: String,
     val confidence: Float,
-    val logits: FloatArray
+    val logits: FloatArray = floatArrayOf()
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
