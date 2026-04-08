@@ -9,10 +9,10 @@ from plant_disease_cnn import PlantDiseaseCNN
 from plant_disease_llm import PlantDiseaseLLM
 
 class PlantDiseaseAssistant:
-    def __init__(self, 
-                 num_classes=38, 
+    def __init__(self,
+                 num_classes=114,
                  confidence_threshold=0.7,
-                 llm_model="llama3.2:3b"):
+                 llm_model="qwen3:8b"):
         """
         Initialize the complete pipeline
         
@@ -191,7 +191,7 @@ class PlantDiseaseAssistant:
 if __name__ == "__main__":
     # Initialize assistant
     assistant = PlantDiseaseAssistant(
-        num_classes=38,
+        num_classes=114,
         confidence_threshold=0.7,
         llm_model="llama3.2:1b"  # Change to your model
     )

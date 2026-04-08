@@ -1,0 +1,166 @@
+[
+  "Apple_Apple_Scab",
+  "Apple_Black_Rot",
+  "Apple_Cedar_Apple_Rust",
+  "Apple_Healthy",
+
+
+
+  "Banana_Cordana",
+  "Banana_Healthy",
+  "Banana_Pestalotiopsis",
+  "Banana_Sigatoka",
+
+
+
+  "Blueberry_Healthy",
+
+
+  "Cherry_Healthy",
+  "Cherry_Powdery_Mildew",
+
+
+  "Coconut_Caterpillars",
+  "Coconut_Drying_Of_Leaflets",
+  "Coconut_Flaccidity",
+  "Coconut_Healthy",
+  "Coconut_Yellowing",
+
+
+
+  "Corn_Common_Rust",
+  "Corn_Gray_Leaf_Spot",
+  "Corn_Healthy",
+  "Corn_Northern_Leaf_Blight",
+
+
+  "Cotton_Aphids",
+  "Cotton_Army_Worm",
+  "Cotton_Bacterial_Blight",
+  "Cotton_Curl_Virus",
+  
+  "Cotton_Disease",
+  
+  
+  "Cotton_Fusarium_Wilt",
+  "Cotton_Healthy",
+  "Cotton_Insect_Pest",
+  "Cotton_Powdery_Mildew",
+  "Cotton_Small_Leaf",
+  "Cotton_Target_Spot",
+  "Cotton_White_Mold",
+  "Cotton_Wilt",
+
+
+
+  "Eggplant_Healthy",
+  "Eggplant_Insect_Pest",
+  "Eggplant_Leaf_Spot",
+  "Eggplant_Mosaic_Virus",
+  "Eggplant_Small_Leaf",
+  "Eggplant_White_Mold",
+  "Eggplant_Wilt",
+
+
+  "Grape_Black_Rot",
+  "Grape_Esca_Black_Measles",
+  "Grape_Healthy",
+  "Grape_Leaf_Blight",
+
+
+  "Groundnut_Early_Leaf_Spot",
+  "Groundnut_Early_Rust",
+  "Groundnut_Healthy",
+  "Groundnut_Late_Leaf_Spot",
+  "Groundnut_Nutrition_Deficiency",
+  "Groundnut_Rust",
+
+
+  "Mango_Bacterial_Canker",
+  "Mango_Cutting_Weevil",
+  "Mango_Die_Back",
+  "Mango_Gall_Midge",
+  "Mango_Healthy",
+  "Mango_Powdery_Mildew",
+  "Mango_Sooty_Mould",
+
+
+  "Okra_Healthy",
+  "Okra_Yellow_Vein_Mosaic",
+
+  
+  "Orange_Citrus_Greening",
+
+
+  "Peach_Bacterial_Spot",
+  "Peach_Healthy",
+
+
+  "Peanut_Dead_Leaf",
+  "Peanut_Healthy",
+
+
+  "Pepper_Bacterial_Spot",
+  "Pepper_Healthy",
+
+
+  "Potato_Early_Blight",
+  "Potato_Healthy",
+  "Potato_Late_Blight",
+
+  "Raspberry_Healthy",
+
+  "Rice_Bacterial_Leaf_Blight",
+  "Rice_Brown_Spot",
+  "Rice_Healthy",
+  "Rice_Hispa",
+  "Rice_Leaf_Blast",
+  "Rice_Leaf_Scald",
+  "Rice_Leaf_Smut",
+  "Rice_Sheath_Blight"
+  ,
+  "Sorghum_Anthracnose_Red_Rot",
+  "Sorghum_Covered_Kernel_Smut",
+  "Sorghum_Grain_Mold",
+  "Sorghum_Head_Smut",
+  "Sorghum_Loose_Smut",
+
+  "Soybean_Healthy",
+
+  "Squash_Powdery_Mildew",
+
+  "Strawberry_Healthy",
+  "Strawberry_Leaf_Scorch",
+
+  "Sugarcane_Bacterial_Blight",
+  "Sugarcane_Healthy",
+  "Sugarcane_Mosaic",
+  "Sugarcane_Red_Rot",
+  "Sugarcane_Rust",
+  "Sugarcane_Yellow",
+
+  "Tea_Algal_Leaf",
+  "Tea_Anthracnose",
+  "Tea_Bird_Eye_Spot",
+  "Tea_Brown_Blight",
+  "Tea_Gray_Blight",
+  "Tea_Green_Mirid_Bug",
+  "Tea_Healthy",
+  "Tea_Helopeltis",
+  "Tea_Red_Leaf_Spot",
+  "Tea_Red_Spider",
+  "Tea_White_Spot",
+
+  "Tomato_Bacterial_Spot",
+  "Tomato_Early_Blight",
+  "Tomato_Healthy",
+  "Tomato_Late_Blight",
+  "Tomato_Leaf_Mold",
+  "Tomato_Mosaic_Virus",
+  "Tomato_Septoria_Leaf_Spot",
+  "Tomato_Spider_Mites",
+  "Tomato_Target_Spot",
+  "Tomato_Yellow_Leaf_Curl_Virus"
+
+
+]

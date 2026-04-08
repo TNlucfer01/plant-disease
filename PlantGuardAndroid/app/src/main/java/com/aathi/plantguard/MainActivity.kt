@@ -128,7 +128,16 @@ class MainActivity : ComponentActivity() {
                                     val bitmap = android.graphics.BitmapFactory.decodeFile(history.imagePath)
                                     if (bitmap != null) {
                                         currentImage = bitmap
-                                        currentResult = ClassificationResult(history.label, history.confidence)
+                                        val spaceIdx = history.label.indexOf(' ')
+                                        val plant = if (spaceIdx >= 0) history.label.substring(0, spaceIdx) else history.label
+                                        val disease = if (spaceIdx >= 0) history.label.substring(spaceIdx + 1) else "Unknown"
+                                        currentResult = ClassificationResult(
+                                            label      = history.label,
+                                            plant      = plant,
+                                            disease    = disease,
+                                            confidence = history.confidence,
+                                            isUnknown  = history.label == "Unknown"
+                                        )
                                         currentScreen = Screen.Result
                                     }
                                 }

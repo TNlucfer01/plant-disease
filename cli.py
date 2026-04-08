@@ -6,7 +6,12 @@ Quick testing without the full Streamlit UI
 
 import argparse
 import json
+import sys
+import os
 from pathlib import Path
+
+# Ensure src/ modules are importable
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 from plant_disease_pipeline import PlantDiseaseAssistant
 
 
@@ -174,8 +179,8 @@ For the full web interface, use:
         '--num-classes',
         '-n',
         type=int,
-        default=38,
-        help='Number of disease classes (default: 38)'
+        default=114,
+        help='Number of disease classes (default: 114)'
     )
     
     args = parser.parse_args()

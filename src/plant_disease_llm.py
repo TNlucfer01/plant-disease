@@ -10,7 +10,7 @@ from typing import Dict
 class PlantDiseaseLLM:
     def __init__(
         self,
-        model_name: str = "llama3.2:1b",
+        model_name: str = "qwen3:8b",
         ollama_url: str = "http://localhost:11434",
     ):
         """

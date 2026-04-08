@@ -13,9 +13,13 @@ from pathlib import Path
 import tempfile
 import shutil
 import json
+import sys
+import os
 import torch
 from fastapi.middleware.cors import CORSMiddleware
-# Import your pipeline (adjust import path as needed)
+
+# Make sure src/ modules are importable when bk.py is run from the project root
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))) 
 from plant_disease_pipeline import PlantDiseaseAssistant
 
 app = FastAPI(
@@ -23,6 +27,7 @@ app = FastAPI(
     description="Detect plant diseases from leaf images (file upload or URL)",
     version="1.0.0"
 )
+
 app.add_middleware(CORSMiddleware,
 allow_origins=["*"],
 allow_credentials=True,
@@ -37,7 +42,7 @@ async def startup_event():
     global assistant
     print("Loading models...")
     assistant = PlantDiseaseAssistant(
-        num_classes=38,
+        num_classes=114,
         confidence_threshold=0.7,
         llm_model="llama3.2:1b"
     )

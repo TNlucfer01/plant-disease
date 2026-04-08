@@ -3,15 +3,20 @@ Streamlit App for Plant Disease Detection
 Complete UI for CNN → LLM pipeline
 """
 
-import streamlit as st
-from PIL import Image
+import streamlit as st # for the ui 
+from PIL import Image # gettin gthe imahe 
 import io
-import json
-from pathlib import Path
+import json # where am i even using the json 
+from pathlib import Path 
 import sys
+import os
+
+# Ensure src/ modules are importable when running from project root ooh i see it to make sure to import the value from the src while running 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
 # Import pipeline
 from plant_disease_pipeline import PlantDiseaseAssistant
+
 
 # Page config
 st.set_page_config(
@@ -51,11 +56,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ui
 # Initialize session state
 if 'assistant' not in st.session_state:
     with st.spinner("Loading AI models..."):
         st.session_state.assistant = PlantDiseaseAssistant(
-            num_classes=38,
+            num_classes=114,
             confidence_threshold=0.7,
             llm_model="llama3.2:1b"
         )
@@ -84,15 +90,20 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("About")
     st.markdown("""
-    **Model:** MobileNetV2  
+    **Model:** MobileNetV2 (fine-tuned)  
+    **Accuracy:** 92.9% validation  
     **LLM:** Ollama (Local)  
-    **Classes:** 38 plant diseases  
+    **Classes:** 114 plant diseases  
     
     **Supported Plants:**
-    - Apple, Tomato, Potato
-    - Corn, Grape, Pepper
-    - Strawberry, Cherry, Peach
-    - And more...
+    - Apple, Banana, Blueberry
+    - Cherry, Corn, Cotton
+    - Eggplant, Grape, Groundnut
+    - Mango, Okra, Onion, Orange
+    - Paddy, Peach, Pepper, Potato
+    - Rice, Sorghum, Soybean
+    - Squash, Strawberry, Sugarcane
+    - Tea, Tomato, Wheat & more...
     """)
     
     st.markdown("---")
@@ -136,7 +147,6 @@ with tab1:
             # Save temporarily
             temp_path = Path("temp_upload.jpg")
             image.save(temp_path)
-    
     with col2:
         st.subheader("Analysis Results")
         
@@ -158,7 +168,16 @@ with tab1:
                 detection = result['detection']
                 
                 # Confidence indicator
-                if detection['is_confident']:
+                if detection.get('is_unknown'):
+                    st.markdown(
+                        f'<div class="confidence-low">'
+                        f'<strong>Unknown Plant / Disease</strong><br>'
+                        f'This image was not clear. Try a clearer photo of a known plant Leaf.<br>'
+                        f'Confidence: {detection["confidence"]:.1%}'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
+                elif detection['is_confident']:
                     st.markdown(
                         f'<div class="confidence-high">'
                         f'<strong>High Confidence Detection</strong><br>'
@@ -171,7 +190,7 @@ with tab1:
                         f'<div class="confidence-low">'
                         f'<strong>Low Confidence Detection</strong><br>'
                         f'Confidence: {detection["confidence"]:.1%}<br>'
-                        f'⚠️ Further verification recommended'
+                        f'Further verification recommended'
                         f'</div>',
                         unsafe_allow_html=True
                     )
@@ -341,7 +360,7 @@ with tab3:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    <p>Plant Disease Detection System | Powered by MobileNetV2 + Ollama</p>
-    <p>⚠️ For informational purposes only. Consult agricultural experts for critical decisions.</p>
+    <p>Plant Disease Detection System | MobileNetV2 (92.9% accuracy) + Ollama | 114 classes</p>
+    <p>For informational purposes only. Consult agricultural experts for critical decisions.</p>
 </div>
 """, unsafe_allow_html=True)

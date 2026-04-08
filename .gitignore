@@ -26,5 +26,8 @@ target/
 *.tmp
 *.zip
 
+plant_disease_datasets\
+
 sdk/
+plant_disease_dataset/
 plant_disease_mobile_android.iml
