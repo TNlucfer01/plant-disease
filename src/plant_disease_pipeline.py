@@ -8,11 +8,16 @@ from pathlib import Path
 from plant_disease_cnn import PlantDiseaseCNN
 from plant_disease_llm import PlantDiseaseLLM
 
+#for the pipeline 
 class PlantDiseaseAssistant:
     def __init__(self,
                  num_classes=114,
                  confidence_threshold=0.7,
+<<<<<<<< HEAD:src/plant_disease_pipeline.py
                  llm_model="qwen3:8b"):
+========
+                 llm_model="llama3.2:1b"):
+>>>>>>>> main:App/plant_disease_pipeline.py
         """
         Initialize the complete pipeline
         
@@ -23,18 +28,18 @@ class PlantDiseaseAssistant:
         """
         print("Initializing Plant Disease Assistant...")
         
-        # Initialize CNN
+        # Initialize CNN 
         print("Loading CNN model (MobileNetV2)...")
         self.cnn = PlantDiseaseCNN(
             num_classes=num_classes,
             confidence_threshold=confidence_threshold
         )
         
-        # Load trained weights
+        # Load trained weights how does this training even works
         print("Loading trained model weights...")
         self.cnn.load_model('best_plant_disease_model.pth')
         
-        # Initialize LLM
+        # Initialize LLM it can be anything rigt 
         print("Connecting to LLM (Ollama)...")
         self.llm = PlantDiseaseLLM(model_name=llm_model)
         
@@ -42,6 +47,7 @@ class PlantDiseaseAssistant:
         if self.llm.test_connection():
             print("✓ Ollama connected successfully")
         else:
+            #but how 
             print("⚠️  Ollama not running - will use fallback advice")
         
         print("Assistant ready!\n")
@@ -96,6 +102,7 @@ class PlantDiseaseAssistant:
         
         return complete_result
     
+    # i'm not using this in th bk.py folder 
     def analyze_and_display(self, image_path):
         """
         Analyze image and display formatted results
@@ -136,6 +143,7 @@ class PlantDiseaseAssistant:
         with open(output_path, 'w') as f:
             json.dump(result, f, indent=2)
         print(f"\nResults saved to {output_path}")
+        # im not using this too in that application 
     
     def batch_analyze(self, image_folder, output_folder='results'):
         """
